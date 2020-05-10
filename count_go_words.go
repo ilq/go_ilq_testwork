@@ -54,33 +54,6 @@ func init() {
     flag.StringVar(&word, "word", "go", "The number of goroutines running at the same time.")
 }
 
-func main() {
-    flag.Parse()
-	totalCount := TotalCount{count: 0}
-	cQnt := make(chan wordCount)
-	grCount := GoRoutineCount{count: 0}
-	printedCounts := 0
-// 	k := 5
-	urls := getUrls()
-
-	for _, url := range urls {
-		go getWordCount(url, word, cQnt, &grCount)
-
-		grCount.increment()
-		if grCount.count >= k {
-			receiveCQnt(cQnt, &totalCount)
-			printedCounts++
-			grCount.decrement()
-		}
-	}
-
-	for i := 0; i < (len(urls) - printedCounts); i++ {
-		receiveCQnt(cQnt, &totalCount)
-	}
-
-	fmt.Printf("Total: %d\n", totalCount.count)
-}
-
 func getUrls() []string {
 	reader := bufio.NewReader(os.Stdin)
 	urls := make([]string, 0)
@@ -110,4 +83,30 @@ func receiveCQnt(cQnt chan wordCount, totalCount *TotalCount) {
 	words := <-cQnt
 	fmt.Printf("Count for %s: %d\n", words.url, words.count)
 	totalCount.add(words.count)
+}
+
+func main() {
+    flag.Parse()
+	totalCount := TotalCount{count: 0}
+	cQnt := make(chan wordCount)
+	grCount := GoRoutineCount{count: 0}
+	printedCounts := 0
+	urls := getUrls()
+
+	for _, url := range urls {
+		go getWordCount(url, word, cQnt, &grCount)
+
+		grCount.increment()
+		if grCount.count >= k {
+			receiveCQnt(cQnt, &totalCount)
+			printedCounts++
+			grCount.decrement()
+		}
+	}
+
+	for i := 0; i < (len(urls) - printedCounts); i++ {
+		receiveCQnt(cQnt, &totalCount)
+	}
+
+	fmt.Printf("Total: %d\n", totalCount.count)
 }
