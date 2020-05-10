@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -44,16 +45,26 @@ type wordCount struct {
 	count int
 }
 
+var word string
+var k int
+
+func init() {
+    flag.IntVar(&k, "k", 5, "The number of goroutines running at the same time.")
+    flag.StringVar(&word, "w", "go", "The number of goroutines running at the same time.")
+    flag.StringVar(&word, "word", "go", "The number of goroutines running at the same time.")
+}
+
 func main() {
+    flag.Parse()
 	totalCount := TotalCount{count: 0}
 	cQnt := make(chan wordCount)
 	grCount := GoRoutineCount{count: 0}
 	printedCounts := 0
-	k := 2
+// 	k := 5
 	urls := getUrls()
 
 	for _, url := range urls {
-		go getWordCount(url, cQnt, &grCount)
+		go getWordCount(url, word, cQnt, &grCount)
 
 		grCount.increment()
 		if grCount.count >= k {
@@ -83,14 +94,14 @@ func getUrls() []string {
 	}
 }
 
-func getWordCount(url string, cQnt chan wordCount, grCount *GoRoutineCount) {
+func getWordCount(url, word string, cQnt chan wordCount, grCount *GoRoutineCount) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-	count := strings.Count(string(body), "go")
+	count := strings.Count(string(body), word)
 	grCount.decrement()
 	cQnt <- wordCount{url, count}
 }
