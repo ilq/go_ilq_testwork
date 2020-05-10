@@ -53,6 +53,7 @@ func main() {
 		if gr_count >= k {
 			count := <-c_counts
 			count_lost_gr--
+			fmt.Printf("%s: %d\n", count.url, count.count)
 			totalCount += count.count
 			gr_count--
 		}
